@@ -1,0 +1,46 @@
+{       "title": "Example Schema", 
+	"type": "object", 
+	"maxProperties" : 5,
+        "minProperties" : 1,
+	"properties": { 
+		"firstName ": { 
+			"type": "array",
+			"additionalItems": true,
+			"items" : { "firstChar" : "a",
+                                    "type" : "object",
+                                    "secondChar" : "m"
+                        },
+                        "maxItems" : 5,
+                        "minItems" : 1,
+                        "uniqueItems" : true
+		},
+		"lastName": { 
+			"type": "string", 
+			"maxLength": 5, 
+			"minLength": 2,
+
+		}, 
+		"age": { 
+			"description": "Age in years", 
+			"type": "integer", 
+			"minimum": 0, 
+			"multipleOf" : 5,
+			"maximum" : 5,
+			"exclusiveMinimum": true,
+			"exclusiveMaximum" : false,
+			"allOf" : [{"firstChar" : "a",
+                                    "type" : "object",
+                                    "secondChar" : "m"
+                        }]
+		}
+	},
+	"required": ["firstName", "lastName"],
+	"additionalProperties" : false,
+	"patternProperties" : { "type": "object",
+                                "*" : {"type": "object",
+                                        "first": "test"} 
+                            },
+	"dependecies" : { "type": "object",
+                            "first" : "test" }
+	
+}
