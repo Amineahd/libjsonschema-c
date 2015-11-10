@@ -131,7 +131,8 @@ am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libjsonschema_c_la_LIBADD =
 am_libjsonschema_c_la_OBJECTS =  \
-	libjsonschema_c_la-schema_validator.lo
+	libjsonschema_c_la-schema_validator.lo \
+	libjsonschema_c_la-utils.lo
 libjsonschema_c_la_OBJECTS = $(am_libjsonschema_c_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -381,7 +382,9 @@ SUBDIRS = . tests
 libjsonschema_c_la_CFLAGS = -I/usr/local/include/json-c
 libjsonschema_c_la_LDFLAGS = -L/usr/local/lib -ljson-c
 lib_LTLIBRARIES = libjsonschema-c.la
-libjsonschema_c_la_SOURCES = schema_validator.c 
+libjsonschema_c_la_SOURCES = schema_validator.c \
+				utils.c
+
 all: all-recursive
 
 .SUFFIXES:
@@ -465,6 +468,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjsonschema_c_la-schema_validator.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libjsonschema_c_la-utils.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -493,6 +497,13 @@ libjsonschema_c_la-schema_validator.lo: schema_validator.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='schema_validator.c' object='libjsonschema_c_la-schema_validator.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libjsonschema_c_la_CFLAGS) $(CFLAGS) -c -o libjsonschema_c_la-schema_validator.lo `test -f 'schema_validator.c' || echo '$(srcdir)/'`schema_validator.c
+
+libjsonschema_c_la-utils.lo: utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libjsonschema_c_la_CFLAGS) $(CFLAGS) -MT libjsonschema_c_la-utils.lo -MD -MP -MF $(DEPDIR)/libjsonschema_c_la-utils.Tpo -c -o libjsonschema_c_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libjsonschema_c_la-utils.Tpo $(DEPDIR)/libjsonschema_c_la-utils.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='libjsonschema_c_la-utils.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libjsonschema_c_la_CFLAGS) $(CFLAGS) -c -o libjsonschema_c_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

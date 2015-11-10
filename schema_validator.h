@@ -7,30 +7,23 @@
  * @see http://json-schema.org/latest/json-schema-validation.html
  */
 
+#include <stdio.h>
+#include <string.h>
+#include <regex.h>
 #include "json.h"
 #include "linkhash.h"
+#include "utils.h"
 
-//terminal colors
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
+
+//all reserved keywords
+char* keywords[] = {"multipleOf","maximum","minimum","exclusiveMinimum","exclusiveMaximum",
+                 "maxLength","minLength","pattern",
+                 "additionalItems","items","minItems","maxItems","uniqueItems",
+                 "maxProperties","minProperties","required","properties","patternProperties","additionalProperties","dependencies" 
+                };
 
 static int global_res = 1;
-/**
- * @brief Prints a colored message in the terminal.
- */
-void
-printf_colored(char* color,char* buff);
 
-/**
- * @brief Sorts items of a JSON array. copied from test1.c
- */
-static int 
-sort_fn (const void *j1, const void *j2);
 
 /**
  * @brief Validation handler for numeric types
@@ -59,7 +52,7 @@ json_validate_object_keywords(struct lh_entry* keyword, struct lh_table* parent)
  * @brief Validates an object
  */
 int
-json_validate_object(json_object *jobj);
+json_validate_object(json_object *jobj, int last_pos);
 
 /**
  * @brief Checks that array items are unique
@@ -73,11 +66,6 @@ json_validate_array_items_uniqueness(json_object *jobj);
 int
 json_validate_array_items( json_object *jobj);
 
-void 
-json_parse_object(json_object *jobj);
-
-void 
-json_parse_array( json_object *jobj, char *key);
 
 /**
  * @brief Validates a keyword, by checking the provided keyword against the rules of the V4 draft. check schema_rules.txt file

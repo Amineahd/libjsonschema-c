@@ -11,9 +11,13 @@
 /* no special define */
 #endif
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
+        char schema_file[] = "example_schema.txt";
         printf("Checking schema_validator!\n");
-        json_validate_schema("../example_schema.txt");
+        if(argc > 1)
+            json_validate_schema(argv[1]);
+        else 
+            json_validate_schema("example_schema.txt");
 	return 0;
 }

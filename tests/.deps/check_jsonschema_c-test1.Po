@@ -32,8 +32,8 @@ check_jsonschema_c-test1.o: test1.c /usr/include/stdc-predef.h \
  /usr/include/xlocale.h /usr/include/x86_64-linux-gnu/bits/string.h \
  /usr/include/x86_64-linux-gnu/bits/string2.h \
  /usr/include/x86_64-linux-gnu/bits/string3.h ../schema_validator.h \
- /usr/local/include/json-c/json.h /usr/local/include/json-c/debug.h \
- /usr/local/include/json-c/linkhash.h \
+ /usr/include/regex.h /usr/local/include/json-c/json.h \
+ /usr/local/include/json-c/debug.h /usr/local/include/json-c/linkhash.h \
  /usr/local/include/json-c/json_object.h \
  /usr/local/include/json-c/json_inttypes.h \
  /usr/local/include/json-c/json_config.h /usr/include/inttypes.h \
@@ -44,7 +44,7 @@ check_jsonschema_c-test1.o: test1.c /usr/include/stdc-predef.h \
  /usr/local/include/json-c/json_tokener.h \
  /usr/local/include/json-c/json_object_iterator.h \
  /usr/local/include/json-c/json_c_version.h \
- /usr/local/include/json-c/linkhash.h
+ /usr/local/include/json-c/linkhash.h ../utils.h
 
 /usr/include/stdc-predef.h:
 
@@ -134,6 +134,8 @@ check_jsonschema_c-test1.o: test1.c /usr/include/stdc-predef.h \
 
 ../schema_validator.h:
 
+/usr/include/regex.h:
+
 /usr/local/include/json-c/json.h:
 
 /usr/local/include/json-c/debug.h:
@@ -165,3 +167,5 @@ check_jsonschema_c-test1.o: test1.c /usr/include/stdc-predef.h \
 /usr/local/include/json-c/json_c_version.h:
 
 /usr/local/include/json-c/linkhash.h:
+
+../utils.h:
