@@ -398,7 +398,7 @@ json_validate_keyword(struct lh_entry* keyword, struct lh_table* parent) {
             return 0;
         }
         //value must be one of: date-time ,email,hostname, ipv4,ipv6, uri
-        char * values[] = {"date-time" ,"email","hostname", "ipv4","ipv6", "uri"};
+        static const char * values[] = {"date-time" ,"email","hostname", "ipv4","ipv6", "uri"};
         int len = sizeof(values)/ sizeof(values[0]);
         int i;
         for(i=0; i< len; i++) {
@@ -632,6 +632,12 @@ json_validate_object(json_object *jobj,int last_pos) {
 
 int 
 json_validate_array_items_uniqueness(json_object *jobj){
+
+    if(json_object_get_type(jobj) != json_type_array)
+    {
+        printf_colored(ANSI_COLOR_RED,"type must be array.");
+        return 0;
+    }
     int arraylen = json_object_array_length(jobj); /*Getting the length of the array*/
     int i;
     //sort the array
@@ -640,7 +646,7 @@ json_validate_array_items_uniqueness(json_object *jobj){
     for (i=0; i< arraylen-1; i++){
         json_object * jvalue = json_object_array_get_idx(jobj, i);
         json_object * jvalue1 = json_object_array_get_idx(jobj, i+1);
-        if(strcmp(json_object_get_string(jvalue),json_object_get_string(jvalue1)) == 0){
+        if(jvalue == jvalue1){
             //not unique
             return 0;
         }
@@ -650,6 +656,11 @@ json_validate_array_items_uniqueness(json_object *jobj){
 int
 json_validate_array_items( json_object *jobj) {
     
+    if(json_object_get_type(jobj) != json_type_array)
+    {
+        printf_colored(ANSI_COLOR_RED,"type must be array.");
+        return 0;
+    }
     enum json_type type;
 
     int arraylen = json_object_array_length(jobj); /*Getting the length of the array*/
@@ -664,18 +675,13 @@ json_validate_array_items( json_object *jobj) {
         if (type != json_type_object) {
             printf("array item #%d must be an object",i);
             return 0;
-        }/*else {
-            if (json_validate_object(jvalue) != 1) {
-                printf("array item #%d must be an object with a valid JSON schema",i);
-                return 0;
-            }
-        }*/
+        }
     }
     return 1;
 }
 
 int 
-json_validate_schema(char* filename) {
+json_validate_schema(const char* filename) {
 
     int res;
     json_object *schema = json_object_from_file(filename);

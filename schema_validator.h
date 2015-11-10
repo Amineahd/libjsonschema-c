@@ -77,4 +77,4 @@ validate_keyword(struct lh_entry* keyword, struct lh_table* parent_type);
  * @brief Validates a schema, by checking the provided schema against the rules of the V4 draft. check schema_rules.txt file
  */
 int 
-json_validate_schema(char* filename);
+json_validate_schema(const char* filename);
