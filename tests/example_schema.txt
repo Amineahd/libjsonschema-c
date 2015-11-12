@@ -1,4 +1,4 @@
-{       "title": "Example Schema", 
+{       "title": "", 
 	"type": "object", 
 	"maxProperties" : 5,
         "minProperties" : 1,
@@ -22,17 +22,15 @@
 		"age": { 
 			"description": "Age in years", 
 			"type": "integer", 
-			"minimum": 0, 
 			"multipleOf" : 5,
 			"maximum" : 5,
-			"exclusiveMinimum": true,
-			"exclusiveMaximum" : false,
+			"exclusiveMaximum" : true,
 			"allOf" : [{"firstChar" : "a",
                                     "secondChar" : "m"
                         }]
 		}
 	},
-	"required": ["firstName", "lastName"],
+	"required": ["firstChar"],
 	"additionalProperties" : false,
 	"patternProperties" : {"a*": { "name" : "amine"
 	}},

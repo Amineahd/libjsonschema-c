@@ -1,9 +1,63 @@
 
 #include "schema_validator.h"
 
+int 
+json_validate_array_items_uniqueness(json_object *jobj,int type){
+    
+    if(json_object_get_type(jobj) != json_type_array)
+    {
+        printf_colored(ANSI_COLOR_RED,"type must be array.");
+        return 0;
+    }
+    int arraylen = json_object_array_length(jobj); /*Getting the length of the array*/
+    int i;
+    //sort the array
+    json_object_array_sort(jobj,sort_fn);
+    //verify that every item is unique
+    for (i=0; i< arraylen-1; i++){
+        json_object * jvalue = json_object_array_get_idx(jobj, i);
+        json_object * jvalue1 = json_object_array_get_idx(jobj, i+1);
+        if(type != -1)
+            if(json_object_get_type(jvalue) != type)
+                // not valid type
+                return 0;
+        if(strcmp(json_object_to_json_string(jvalue),json_object_to_json_string(jvalue1)) == 0){
+            //not unique
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int
+json_validate_array_items( json_object *jobj) {
+    
+    if(json_object_get_type(jobj) != json_type_array)
+    {
+        printf_colored(ANSI_COLOR_RED,"type must be array.");
+        return 0;
+    }
+    enum json_type type;
+
+    int arraylen = json_object_array_length(jobj); /*Getting the length of the array*/
+    int i;
+    json_object * jvalue;
+
+    //loop through array items
+    for (i=0; i< arraylen; i++){
+        
+        jvalue = json_object_array_get_idx(jobj, i); /*Getting the array element at position i*/
+        type = json_object_get_type(jvalue);
+        if (type != json_type_object) {
+            printf("array item #%d must be an object",i);
+            return 0;
+        }
+    }
+    return 1;
+}
 
 int 
-is_keyword_type_specific(char* keyword){
+is_keyword(char* keyword){
     int array_size = sizeof(keywords)/sizeof(keywords[0]);
     int i;
     
@@ -14,360 +68,155 @@ is_keyword_type_specific(char* keyword){
     }
     return -1; // not found
 }
-int 
-json_validate_numeric_keywords(struct lh_entry* keyword, struct lh_table* parent) {  
+void
+get_allowed_types(int keyword_position, int * allowed_types, int parent){
+    //find the keyword type
+    int i=0;
+    char *p = keywords_constraints[keyword_position][parent+1];
+    while (*p) { // While there are more characters to process...
+        if (isdigit(*p)) { // Upon finding a digit, ...
+            int val = strtol(p, &p, 10); // Read a number, ...
+            allowed_types[i++] = val;
+        }else if(*p == '-' || *p == '+') {
+            int val = strtol(p, &p, 10); // Read a number, ...
+            allowed_types[i++] = val;
+        }
+        else {
+            p++;
+        }
+    } 
     
-    char * keyword_name = (char*)keyword->k;
-    struct json_object * value = (struct json_object *)keyword->v;
-    enum json_type keyword_type = json_object_get_type(value); // type of the keyword value
-    
-    //multipleOf
-    if (strcmp(keyword_name, "multipleOf") == 0) {
-        //verify that the keyword type is a number
-        if(keyword_type != json_type_double && keyword_type != json_type_int) {
-            printf_colored(ANSI_COLOR_RED ,"multipleOf: object value type must be a number or an integer. ");
-            return 0;
-        }
-        //must be greater than or equal to 0
-        if(keyword_type == json_type_int){
-            if(json_object_get_int(value) < 0) {
-                printf_colored(ANSI_COLOR_RED , "multipleOf: value type must be greater than or equal to 0.");
-                return 0;
-            }
-        }
-        if(keyword_type == json_type_double){
-            if(json_object_get_double(value) < 0) {
-                printf_colored(ANSI_COLOR_RED , "multipleOf: value type must be greater than or equal to 0.");
-                return 0;
-            }
-        }
-        //success
-        return 1; 
+}
 
-    }
-    //exclusiveMaximum
-    if (strcmp(keyword_name, "exclusiveMaximum") == 0) {
-        //verify that maximum is present
-        if (lh_table_lookup_entry(parent,"maximum") == NULL ) {
-            printf_colored(ANSI_COLOR_RED , "exclusiveMaximum: maximum keyword not found.");
-            return 0;
-        }
-        //verify that the keyword type is boolean
-        if(keyword_type != json_type_boolean) {
-            printf_colored(ANSI_COLOR_RED , "exclusiveMaximum: value type must be boolean.");
-            return 0;
-        }
-        //success
-        return 1;
-    }
-    //exclusiveMinimum
-    if (strcmp(keyword_name , "exclusiveMinimum") == 0) {
-        //verify that minimum is present
-        if (lh_table_lookup_entry(parent,"minimum") == NULL ) {
-            printf_colored(ANSI_COLOR_RED ,"exclusiveMinimum: minimum keyword not found.");
-            return 0;
-        }
-        //verify that the keyword type is boolean
-        if(keyword_type != json_type_boolean) {
-            printf_colored(ANSI_COLOR_RED ,"exclusiveMinimum: value type must be boolean.");
-            return 0;
-        }
-        //success
-        return 1;
-    }
-    //minimum or maximum
-    if ( strcmp(keyword_name , "maximum") == 0 || strcmp(keyword_name , "minimum") == 0 ) {
-        //must be a number
-        if(keyword_type != json_type_int && keyword_type != json_type_double) {
-            printf_colored(ANSI_COLOR_RED ,"minimum or maximum: value type must be a number.");
-            return 0;
-        }
-        //success
-        return 1;
+int validate_regex(const char * regex){
+    //pattern must conform the ECMA 262
+    regex_t pattern;
+    memset(&pattern, 0, sizeof(regex_t));
+    int err;
+    if((err = regcomp(&pattern, regex,REG_EXTENDED | REG_NOSUB))){
+        char buffer[256];
+        regerror(err,&pattern,buffer,sizeof(buffer)/sizeof(buffer[0]));
+        char buff[256];
+        sprintf(buff,"invalid pattern with error: %s", buffer);
+        printf_colored(ANSI_COLOR_RED , buff);
+        return 0;
     }
     return 1;
 }
 
-int 
-json_validate_string_keywords(struct lh_entry* keyword, struct lh_table* parent) { 
+int
+json_validate_parent_type(char * type,int keyword_position){
+    //there should be at maximum two types for the parent
+    int parent_type[2] = {7,7};
+    int i;
     
-    char * keyword_name = (char*)keyword->k;
-    struct json_object * value = (struct json_object *)keyword->v;
-    enum json_type keyword_type = json_object_get_type(value); // type of the keyword value
-
-    if(strcmp(keyword_name, "maxLength") == 0 || strcmp(keyword_name , "minLength") == 0) {
-        //must be a number
-        if(keyword_type != json_type_int && keyword_type != json_type_double) {
-            
-            printf_colored(ANSI_COLOR_RED , "maxLength or minLength: value type must be a number.");
-            return 0;
-        }
-        //must be greater than or equal to 0
-        if(keyword_type == json_type_int){
-            if(json_object_get_int(value) < 0) {
-                printf_colored(ANSI_COLOR_RED , "maxLength or minLength: value type must be greater than or equal to 0.");
-                return 0;
-            }
-        }
-        if(keyword_type == json_type_double){
-            if(json_object_get_double(value) < 0) {
-                printf_colored(ANSI_COLOR_RED , "maxLength or minLength: value type must be greater than or equal to 0.");
-                return 0;
-            }
-        }
-        //success
+    get_allowed_types(keyword_position,parent_type,1);
+    //if a parent type validation is not required, return directly
+    if(parent_type[0] == -1)
         return 1;
+    //get parent type id
+    for(i=0; i < 7; i++){
+        if(strcmp(type,json_types_id[i]) == 0)
+            if( i == parent_type[0] || i == parent_type[1])
+                return 1;
     }
-    if(strcmp(keyword_name, "pattern") == 0) {
-        //value must be a string
-        if(keyword_type != json_type_string){
-            printf_colored(ANSI_COLOR_RED, "pattern: value type must be a string");
-        }
-        //pattern must conform the ECMA 262
-        regex_t pattern;
-        memset(&pattern, 0, sizeof(regex_t));
-        int err;
-        if((err = regcomp(&pattern, json_object_get_string(value),REG_EXTENDED | REG_NOSUB))){
-            char buffer[1024];
-            regerror(err,&pattern,buffer,sizeof(buffer)/sizeof(buffer[0]));
-            char buff[1024];
-            sprintf(buff,"pattern: invalid pattern with error: %s ", buffer);
-            printf_colored(ANSI_COLOR_RED,buff);
+    return 0;
+}
+
+int 
+json_validate_type(int type,int keyword_position){
+    int allowed_types[7] = {7,7,7,7,7,7,7}; //max 7 types
+    int i;
+    get_allowed_types(keyword_position,allowed_types,0);
+    for(i=0;i<7;i++){
+        if(allowed_types[i] == -1)
+            return 1;
+        if(type == allowed_types[i]) {
+            return 1;
+        }else if(allowed_types[i] > 6)
+            //w've reached the number of types
+            break;
+    }
+    return 0;
+}
+int check_dependencies(int keyword_position, lh_table* parent){
+    int dep = atoi(keywords_constraints[keyword_position][3]); // position of the required keyword
+    if(dep > -1){
+        char * dep_keyword = keywords_constraints[dep][0] ; // the keyword our keyword depends on
+        if (lh_table_lookup_entry(parent,dep_keyword) == NULL ) 
             return 0;
-        }
-        return 1;
     }
     return 1;
 }
 
-int 
-json_validate_array_keywords(struct lh_entry* keyword, struct lh_table* parent) {  
-    
-    char * keyword_name = (char*)keyword->k;
+int check_allowed_values(int keyword_position,struct lh_entry* keyword, struct lh_table* parent){
+    int allowed_values = atoi(keywords_constraints[keyword_position][4]); // get allowed values ID
     struct json_object * value = (struct json_object *)keyword->v;
-    enum json_type keyword_type = json_object_get_type(value); // type of the keyword value
-    
-    if(strcmp(keyword_name,"additionalItems") == 0) {
-        //type must be boolean or an object
-        if(keyword_type != json_type_boolean && keyword_type != json_type_object) {
-            printf_colored(ANSI_COLOR_RED,"additionalItems: value type must be a boolean or an object.");
-            return 0;
-        }
-        //if an object, must have a valid schema
-//         /*if(keyword_type == json_type_object) {
-//             if(json_validate_object((struct json_object*)keyword->v) != 1) {
-//                 printf_colored(ANSI_COLOR_RED,"additionalItems: value object must have a valid JSON schema.");
-//                 return 0;
-//             }
-//         }*/
-        return 1;
-    }
-    if(strcmp(keyword_name,"items") == 0) {
-        //type must be an array or an object
-        if(keyword_type != json_type_array && keyword_type != json_type_object) {
-            printf_colored(ANSI_COLOR_RED ,"items: value type must be an array or an object.");
-            return 0;
-        }
-//        /* //if an object, must have a valid schema
-//         if(keyword_type == json_type_object) {
-//             if(json_validate_object((struct json_object*)keyword->v) != 1) {
-//                 printf_colored(ANSI_COLOR_RED ,"items: value object must have a valid JSON schema.");
-//                 return 0;
-//             }
-//         }*/
-        //if an array, items must be objects with valid schema
-        if(keyword_type == json_type_array) {
-            //validate items are objects with a valid JSON schema
-            if(json_validate_array_items((struct json_object*)keyword->v) != 1) {
-                printf_colored(ANSI_COLOR_RED ,"items: array items must be objects with a valid JSON schema.");
+    const char *key = (char*) keyword->k;
+    int i;
+    const int array_length = sizeof(values)/sizeof(values[0]);
+/*
+* allowed values = "-1" => no specific rules, just verify the value is of the required type
+*                  "0" => strictly greater than 0
+*                  "1" => greater than or equal to 0
+*                  "2" => array of objects
+*                  "3" => array of unique string items and at least one item is provided
+*                  "4" => a valid regex
+*                  "5" => name of the object should be a valid regex
+*/
+    switch(allowed_values) {
+        case 0:
+            if(json_object_get_int(value) < 1){
+                printf("value: %d\n",json_object_get_int(value));
+                printf_colored(ANSI_COLOR_RED ,"value must be strictly greater than 0. ");
                 return 0;
             }
-        }
-        //success
-        return 1;
-    }
-    if(strcmp(keyword_name, "maxItems") == 0 || strcmp(keyword_name , "minItems") == 0) {
-        //must be a number
-        if(keyword_type != json_type_int && keyword_type != json_type_double) {
-            printf_colored(ANSI_COLOR_RED ,"maxItems or minItems: value type must be a number. ");
-            return 0;
-        }
-        //must be greater than or equal to 0
-            if(keyword_type == json_type_int ) {
-                if(json_object_get_int(value) < 0) {
-                    printf_colored(ANSI_COLOR_RED, "maxItems or minItems: value type must be greater than or equal to 0.");
-                    return 0;
-                }
-            }else if(keyword_type == json_type_double ) {
-                if(json_object_get_double(value) < 0) {
-                    printf_colored(ANSI_COLOR_RED ,"maxItems or minItems: value type must be greater than or equal to 0.");
-                    return 0;
-                }
-            }
-        //success
-        return 1; 
-    }
-    if(strcmp(keyword_name, "uniqueItems") == 0){
-        //must be a boolean
-        if(keyword_type != json_type_boolean) {
-            printf_colored(ANSI_COLOR_RED ,"uniqueItems: value type must be a boolean.");
-            return 0;
-        }
-        //success
-        return 1;
-    }
-    return 1;
-}
-
-int 
-json_validate_object_keywords(struct lh_entry* keyword, struct lh_table* parent) {  
-    
-    char * keyword_name = (char*)keyword->k;
-    struct json_object * value = (struct json_object *)keyword->v;
-    enum json_type keyword_type = json_object_get_type(value); // type of the keyword value
-    if(strcmp(keyword_name, "maxProperties") == 0 || strcmp(keyword_name , "minProperties") == 0) {
-        //must be a number
-        if(keyword_type != json_type_int && keyword_type != json_type_double) {
-            printf_colored(ANSI_COLOR_RED, "maxProperties or minProperties: value type must be a number.");
-            return 0;
-        }
-        //must be greater than or equal to 0
-            if(keyword_type == json_type_int){
-                if(json_object_get_int(value) < 0) {
-                    printf_colored(ANSI_COLOR_RED ,"maxProperties or minProperties: value type must be greater than or equal to 0.");
-                    return 0;
-                }
-            }
-            if(keyword_type == json_type_double){
-                if(json_object_get_double(value) < 0) {
-                    printf_colored(ANSI_COLOR_RED, "maxProperties or minProperties: value type must be greater than or equal to 0.");
-                    return 0;
-                }
-            }
-        //success
-        return 1;
-    }
-    
-    if(strcmp(keyword_name, "required") == 0){
-        //must be an array
-        if(keyword_type != json_type_array ) {
-            printf_colored(ANSI_COLOR_RED ,"required: value type must be an array.");
-            return 0;
-        }
-        //at least one item must be present
-        if(json_object_array_length((struct json_object*)keyword->v) < 1) {
-            printf_colored(ANSI_COLOR_RED ,"required: at least one item must be present in the array.");
-            return 0;
-        }
-        //verify uniqueness 
-        if(json_validate_array_items_uniqueness((struct json_object*)keyword->v) != 1){
-            printf_colored(ANSI_COLOR_RED ,"required: items must be unique \n");
-            return 0;
-        }
-        //success
-        return 1;
-    }
-    if(strcmp(keyword_name,"additionalProperties") == 0) {
-        //type must be boolean or an object
-        if(keyword_type != json_type_boolean && keyword_type != json_type_object) {
-            printf_colored(ANSI_COLOR_RED ,"additionalProperties: value type must be a boolean or an object.");
-            return 0;
-        }
-//         //if an object, must have a valid schema
-//         if(keyword_type == json_type_object) {
-//             if(json_validate_object((struct json_object*)keyword->v) != 1) {
-//                 printf_colored(ANSI_COLOR_RED ,"additionalProperties: value object must have a valid JSON schema.");
-//                 return 0;
-//             }
-//         }
-        return 1;
-    }
-    if(strcmp(keyword_name,"properties") == 0) {
-        //type must be an object
-        if(keyword_type != json_type_object) {
-            printf_colored(ANSI_COLOR_RED ,"properties: value type must be an object.");
-            return 0;
-        }
-//         //if an object, must have a valid schema
-//         if(keyword_type == json_type_object) {
-//             if(json_validate_object((struct json_object*)keyword->v) != 1) {
-//                 printf_colored(ANSI_COLOR_RED ,"properties: value object must have a valid JSON schema.");
-//                 return 0;
-//             }
-//         }
-        return 1;
-    }
-    if(strcmp(keyword_name,"patternProperties") == 0) {
-        //must be an object
-        if(keyword_type != json_type_object) {
-            printf_colored(ANSI_COLOR_RED ,"patternProperties: value type must be an object.");
-            return 0;
-        }
-        //each property name must be a valid regex 
-        struct lh_table* object_table = json_object_get_object((struct json_object*)keyword->v);
-        struct lh_entry* entry = object_table->head; 
-       
-        while(entry != NULL) {
-            //pattern must conform the ECMA 262
-            regex_t pattern;
-            memset(&pattern, 0, sizeof(regex_t));
-            int err;
-            if((err = regcomp(&pattern, (char *)entry->k,REG_EXTENDED | REG_NOSUB))){
-                char buffer[1024];
-                regerror(err,&pattern,buffer,sizeof(buffer)/sizeof(buffer[0]));
-                char buff[1024];
-                sprintf(buff,"patternProperties: invalid pattern for value: %s with error: %s",(char *) entry->k, buffer);
-                printf_colored(ANSI_COLOR_RED , buff);
+        break;
+        case 1:
+            if(json_object_get_int(value) < 0){
+                printf("value: %d\n",json_object_get_int(value));
+                printf_colored(ANSI_COLOR_RED ,"value must be greater than or equal to 0. ");
                 return 0;
             }
-        
-//             //pattern values must be valid JSON schema
-//             if(json_validate_object((struct json_object*)entry->v) != 1){
-//                 printf_colored(ANSI_COLOR_RED ,"patternProperties: properties must have valid JSON schema");
-//                 return 0;
-//             }
-            entry = entry->next;
-        }
-        return 1;
-    }
-    if(strcmp(keyword_name,"dependencies") == 0) {
-        //must be an object
-        if(keyword_type != json_type_object) {
-            printf_colored(ANSI_COLOR_RED ,"dependencies: type must be an object.");
+        break;
+        case 2:
+            if(json_object_get_type(value) == json_type_array)
+                return json_validate_array_items(value);
+            break;
+        case 3:
+            if(json_object_get_type(value) == json_type_array){
+                if(json_object_array_length(value) < 1){
+                    printf_colored(ANSI_COLOR_RED,"at least one item must be present in the array");
+                    return 0;
+                }
+                return json_validate_array_items_uniqueness(value,6);
+            }
+            break;
+        case 4:
+            if(json_object_get_type(value) == json_type_string)
+                return validate_regex(json_object_get_string(value));
+            break;
+        case 5:
+            return validate_regex(key);
+            break;
+        case 6:
+            if(json_object_get_type(value) == json_type_array){
+                if(json_object_array_length(value) < 1){
+                    printf_colored(ANSI_COLOR_RED,"at least one item must be present in the array");
+                    return 0;
+                }
+                return json_validate_array_items_uniqueness(value,-1); // no specific type is required
+            }
+            break;
+        case 7:
+            if(json_object_get_type(value) == json_type_string)
+                for(i=0; i<array_length; i++)
+                    if(strcmp(json_object_get_string(value),values[i]) == 0)
+                        return 1;
             return 0;
-        }
-        //each value must be either a valid json object or an array with unique string items(at least one item)
-        struct lh_table* object_table = json_object_get_object(value);
-        struct lh_entry* entry = object_table->head; 
-        while(entry != NULL) {
-            
-            struct json_object * entry_value = (struct json_object *)entry->v;
-            enum json_type type = json_object_get_type(entry_value);
-            if(type != json_type_object && type != json_type_array) {
-                printf_colored(ANSI_COLOR_RED ,"dependencies: value type must be an array or an object.");
-                return 0;
-            }
-            /*if(type == json_type_object){
-                if(json_validate_object(entry_value) != 1) {
-                    printf_colored(ANSI_COLOR_RED ,"dependencies: value must be a valid JSON object.");
-                    return 0;
-                }
-            } else */if(type == json_type_array) {
-                //at least one item must be present
-                if(json_object_array_length(entry_value) < 1) {
-                    printf_colored(ANSI_COLOR_RED, "dependencies: at least one item must be present in the array.");
-                    return 0;
-                }
-                //verify uniqueness 
-                if(json_validate_array_items_uniqueness(entry_value) != 1){
-                    printf_colored(ANSI_COLOR_RED ,"dependencies: items must be unique");
-                    return 0;
-                }
-            }
-            entry = entry->next;
-        }
-        //success
-        return 1;
+            break;
+        default:
+            return 1 ;
     }
     return 1;
 }
@@ -379,137 +228,9 @@ json_validate_keyword(struct lh_entry* keyword, struct lh_table* parent) {
     int keyword_position; // position in the keywords array
     struct json_object * value = (struct json_object *)keyword->v;
     enum json_type keyword_type = json_object_get_type(value);
-    //validate meta-keywords 
-    if(strcmp(keyword_name, "title") == 0 || strcmp(keyword_name, "description") == 0) {
-        // value type must be string
-        if(keyword_type != json_type_string)
-        {
-            printf_colored(ANSI_COLOR_RED ,"title or description: value type must be string ");
-            return 0;
-        }
-        return 1;
-    }
-    if(strcmp(keyword_name, "format") == 0) {
-        char *patternstr;
-        // value type must be string
-        if(keyword_type != json_type_string)
-        {
-            printf_colored(ANSI_COLOR_RED ,"format: value type must be string");
-            return 0;
-        }
-        //value must be one of: date-time ,email,hostname, ipv4,ipv6, uri
-        static const char * values[] = {"date-time" ,"email","hostname", "ipv4","ipv6", "uri"};
-        int len = sizeof(values)/ sizeof(values[0]);
-        int i;
-        for(i=0; i< len; i++) {
-            if(strcmp(json_object_get_string(value),values[i]) == 0)
-                return 1;
-            printf_colored(ANSI_COLOR_RED, "format: value must be one of : date-time ,email,hostname, ipv4,ipv6, uri");
-            return 0;
-        }
-        if(strcmp(json_object_get_string(value),"date-time") == 0){
-            // RFC 3339, section 5.6
-            patternstr = "^[0-9][0-9][0-9][0-9](-[0-1][0-9](-[0-3][0-9] \
-                        (T[0-9][0-9](:[0-9][0-9](:[0-9][0-9])?)?)?)?)?Z?$";
-        }
-        if(strcmp(json_object_get_string(value),"email") == 0){
-            // RFC 5322, section 3.4.1
-         /* patternstr = "'/^(?!(?>(?1)\"?(?>\\\[ -~]|[^"])"?(?1)){255,})(?!(?>(?1)\"?(?>\\\ \
-            [ -~]|[^ \"]) \"?(?1)){65,}@)((?>(?>(?>((?>(?>(?>\x0D\x0A)?[\t ])+|(?>[\t ]*\x0D\x0A)? \
-            [\t ]+)?)(\((?>(?2)(?>[\x01-\x08\x0B\x0C\x0E-\'*-\[\]-\x7F]|\\\[\x00-\x7F]|(?3)))*(?2)\))) \
-            +(?2))|(?2))?)([!#-\'*+\/-9=?^-~-]+|\"(?>(?2)(?>[\x01-\x08\x0B\x0C\x0E-!#-\[\]-\x7F]|\\\[\x00-\x7F]))*(?2)\") \
-            (?>(?1)\.(?1)(?4))*(?1)@(?!(?1)[a-z\d-]{64,})(?1)(?>([a-z\d](?>[a-z\d-]*[a-z\d])?)(?>(?1)\.(?!(?1)[a-z\d-]{64,}) \
-            (?1)(?5)){0,126}|\[(?:(?>IPv6:(?>([a-f\d]{1,4})(?>:(?6)){7}|(?!(?:.*[a-f\d][:\]]){8,})((?6)(?>:(?6)){0,6})?::(?7)?) \
-            )|(?>(?>IPv6:(?>(?6)(?>:(?6)){5}:|(?!(?:.*[a-f\d]:){6,})(?8)?::(?>((?6)(?>:(?6)){0,4}):)?))?(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(?>\.(?9)){3}))\])(?1)$/isD'";*/
-        }
-        if(strlen(patternstr) > 0) {
-            regex_t pattern;
-            memset(&pattern, 0, sizeof(regex_t));
-            int err;
-            if((err = regcomp(&pattern, patternstr,REG_EXTENDED | REG_NOSUB))){
-                char buffer[8192];
-                regerror(err,&pattern,buffer,sizeof(buffer)/sizeof(buffer[0]));
-                char * buff;
-                sprintf(buff,"format: invalid pattern for %s with error: %s",json_object_get_string(value),buffer);
-                printf_colored(ANSI_COLOR_RED ,buff);
-                return 0;
-            }
-        }
-        return 1;
-    }
-        
-    //keywords available for all types
-    if(strcmp(keyword_name, "type") == 0 ){
-        if(keyword_type == json_type_array){
-            if(json_object_array_length(value)>1) {
-                printf_colored(ANSI_COLOR_RED,"array type of more than one item is not allowed");
-                return 0;
-            }
-            struct json_object * item_value= json_object_array_get_idx(value,0);
-            //item should be a string
-            if(json_object_get_type(item_value) != json_type_string){
-                printf_colored(ANSI_COLOR_RED,"type: array item should be a string");
-                return 0;
-            }
-        } else if(keyword_type != json_type_string) {
-            printf_colored(ANSI_COLOR_RED,"type: value type should be either a string or an array");
-            return 0;
-        }
-        return 1;
-    }
-
-    if(strcmp(keyword_name, "enum") == 0){
-        //must be an array
-        if(keyword_type != json_type_array ) {
-            printf_colored(ANSI_COLOR_RED, "enum: value type must be an array.");
-            return 0;
-        }
-        //at least one item must be present
-        if(json_object_array_length((struct json_object*)keyword->v) < 1) {
-            printf_colored(ANSI_COLOR_RED, "enum: at least one item must be present in the array.");
-            return 0;
-        }
-        //verify uniqueness 
-        if(json_validate_array_items_uniqueness((struct json_object*)keyword->v) != 1){
-            printf_colored(ANSI_COLOR_RED, "enum: items must be unique");
-            return 0;
-        }
-        return 1;
-    }
-    if((strcmp(keyword_name, "allOf") == 0 || strcmp(keyword_name, "anyOf") == 0) || strcmp(keyword_name, "oneOf") == 0) {
-        // value type must be an array
-        if(keyword_type != json_type_array)
-        {
-            printf_colored(ANSI_COLOR_RED, "allOf, anyOf or oneOf: value type must be an array ");
-            return 0;
-        }
-        //at least one item must be present
-        if(json_object_array_length((struct json_object*)keyword->v) < 1) {
-            printf_colored(ANSI_COLOR_RED ,"allOf, anyOf or oneOf: at least one item must be present in the array.");
-            return 0;
-        }
-        //validate items are objects with a valid JSON schema
-        if(json_validate_array_items((struct json_object*)keyword->v) != 1) {
-            printf_colored(ANSI_COLOR_RED, "allOf, anyOf or oneOf: array items must be objects with a valid JSON schema.");
-            return 0;
-        }
-        return 1;
-    }
-    if(strcmp(keyword_name, "not") == 0 || strcmp(keyword_name, "definitions") == 0) {
-        // value type must be an object
-        if(keyword_type != json_type_object)
-        {
-            printf_colored(ANSI_COLOR_RED, "not or definitions: value type must be an object");
-            return 0;
-        }
-//         //validate items are objects with a valid JSON schema
-//         if(json_validate_object((struct json_object*)keyword->v) != 1) {
-//             printf_colored(ANSI_COLOR_RED, "not or definitions: array items must be objects with a valid JSON schema.");
-//             return 0;
-//         }
-        return 1;
-    }
-    if((keyword_position = is_keyword_type_specific(keyword_name)) != -1)
+    
+    //check if it is a keyword or not
+    if((keyword_position = is_keyword(keyword_name)) != -1)
     {
         //if we don't have a type, return an error
         //lookup the type keyword
@@ -540,47 +261,26 @@ json_validate_keyword(struct lh_entry* keyword, struct lh_table* parent) {
             printf_colored(ANSI_COLOR_RED,"type: value type should be either a string or an array");
             return 0;
         }
-        /* keywords >0 && < 5 => numbers,
-         * keywords >4 && < 8 => strings,
-         * keywords >7 && < 13 => arrays,
-         * keywords >12 => objects,
-        */
-        if(keyword_position > 0 && keyword_position < 5) {
-            //parent must be a number
-            if(strcmp(parent_type_value , "integer") != 0 && strcmp(parent_type_value , "number") != 0) {
-                char buff[1024]; 
-                sprintf(buff,"%s : parent type must be a number.",keyword_name);
-                printf_colored(ANSI_COLOR_RED,buff);
-                return 0;
-            }
-            return json_validate_numeric_keywords(keyword,parent);
-        } else if(keyword_position > 4 && keyword_position < 8){
-            //parent must be a string
-            if(strcmp(parent_type_value , "string") != 0 ) {
-                char buff[1024]; 
-                sprintf(buff,"%s : parent type must be a string.",keyword_name);
-                printf_colored(ANSI_COLOR_RED,buff);
-                return 0;
-            }
-            return json_validate_string_keywords(keyword,parent);
-        } else if(keyword_position > 7 && keyword_position < 13) {
-            //parent must be an array
-            if(strcmp(parent_type_value , "array") != 0 ) {
-                char buff[1024]; 
-                sprintf(buff,"%s : parent type must be an array.",keyword_name);
-                printf_colored(ANSI_COLOR_RED,buff);
-                return 0;
-            }
-            return json_validate_array_keywords(keyword,parent);
-        } else if(keyword_position > 12) {
-            //parent must be an object
-            if(strcmp(parent_type_value , "object") != 0) {
-                char buff[1024]; 
-                sprintf(buff,"%s : parent type must be an object.",keyword_name);
-                printf_colored(ANSI_COLOR_RED,buff);
-                return 0;
-            }
-            return json_validate_object_keywords(keyword,parent);
+        
+        //check parent type is valid
+        if(json_validate_parent_type(parent_type_value,keyword_position) != 1){
+            printf_colored(ANSI_COLOR_RED,"Invalid parent type");
+            return 0;
+        }
+        
+        //check type is valid
+        if(json_validate_type(keyword_type,keyword_position) != 1){
+            printf_colored(ANSI_COLOR_RED,"Invalid type");
+            return 0;
+        }
+        if(check_dependencies(keyword_position,parent) != 1){
+            printf_colored(ANSI_COLOR_RED,"dependencies missing");
+            return 0;
+        }
+        if(check_allowed_values(keyword_position,keyword,parent) != 1)
+        {
+            printf_colored(ANSI_COLOR_RED,"bad values");
+            return 0;
         }
     }
     return 1;
@@ -592,8 +292,7 @@ json_validate_object(json_object *jobj,int last_pos) {
     struct lh_table* object_table = json_object_get_object(jobj);
     struct lh_entry* entry = object_table->head; 
     enum json_type type;
-    static int res;
-    res = 1 ;
+    static int res = 1;
     int obj_pos = 1 + last_pos;
     while(entry != NULL) {
         
@@ -601,84 +300,21 @@ json_validate_object(json_object *jobj,int last_pos) {
         struct json_object * value = (struct json_object *)entry->v;
         int result;
         
-        printf("**key: %*s\n", (int) strlen(key)+obj_pos,key);
+        printf("**key: %*s\n", (int) strlen(key)+(obj_pos*2),key);
         type = json_object_get_type(value);
-        switch (type) {
-            case json_type_object: 
-                //validate the keyword of the object first
-                result = json_validate_keyword(entry,object_table);
-                if (result == 1) {
-                }else{
-                    res = res && 0; // schema is not valid, but keep checking to get all errors.
-                    global_res = global_res && 0;
-                }
-                json_validate_object(value,obj_pos);
-                break;
-            default:
-                //validate the keyword
-                result = json_validate_keyword(entry,object_table);
-                if (result == 1) {
-                }else{
-                    res = res && 0; // schema is not valid, but keep checking to get all errors.
-                    global_res = global_res && 0;
-                }
-                break;
-                
-        }
+        //validate the keyword of the object first
+        result = json_validate_keyword(entry,object_table);
+        if (result != 1) 
+            res = res && 0; // schema is not valid, but keep checking to get all errors.
+        if(type == json_type_object) 
+            json_validate_object(value,obj_pos);
+
         entry = entry->next;
     }
     return res;
 }
 
-int 
-json_validate_array_items_uniqueness(json_object *jobj){
 
-    if(json_object_get_type(jobj) != json_type_array)
-    {
-        printf_colored(ANSI_COLOR_RED,"type must be array.");
-        return 0;
-    }
-    int arraylen = json_object_array_length(jobj); /*Getting the length of the array*/
-    int i;
-    //sort the array
-    json_object_array_sort(jobj,sort_fn);
-    //verify that every item is unique
-    for (i=0; i< arraylen-1; i++){
-        json_object * jvalue = json_object_array_get_idx(jobj, i);
-        json_object * jvalue1 = json_object_array_get_idx(jobj, i+1);
-        if(jvalue == jvalue1){
-            //not unique
-            return 0;
-        }
-    }
-    return 1;
-}
-int
-json_validate_array_items( json_object *jobj) {
-    
-    if(json_object_get_type(jobj) != json_type_array)
-    {
-        printf_colored(ANSI_COLOR_RED,"type must be array.");
-        return 0;
-    }
-    enum json_type type;
-
-    int arraylen = json_object_array_length(jobj); /*Getting the length of the array*/
-    int i;
-    json_object * jvalue;
-
-    //loop through array items
-    for (i=0; i< arraylen; i++){
-        
-        jvalue = json_object_array_get_idx(jobj, i); /*Getting the array element at position i*/
-        type = json_object_get_type(jvalue);
-        if (type != json_type_object) {
-            printf("array item #%d must be an object",i);
-            return 0;
-        }
-    }
-    return 1;
-}
 
 int 
 json_validate_schema(const char* filename) {
@@ -690,8 +326,8 @@ json_validate_schema(const char* filename) {
         printf_colored("could not load schema from file.",ANSI_COLOR_RED);
         return 0;
     }
-    json_validate_object(schema,0);
-    if(global_res != 1) {
+    res = json_validate_object(schema,0);
+    if(res != 1) {
         printf_colored(ANSI_COLOR_RED,"Invalid schema!");
         return 0;
     }else {
