@@ -2,7 +2,7 @@
 
 
 char* 
-json_error_messages[] = {  "Invalid value",
+json_error_messages[28] = {  "Invalid value",
                             "multipleOf: Value must be multiple of this keyword",
                             "maximum: Value must be strictly smaller than this keyword",
                             "minimum: Value must be strictly greater than this keyword",
@@ -33,8 +33,8 @@ json_error_messages[] = {  "Invalid value",
 };
 
 void
-json_printf_colored(char* color,char * message, ...) {
-    printf (color);
+json_printf_colored(char *color,char *message, ...) {
+    printf ("%s \n ", color);
     va_list vl;
     va_start(vl,message);
     vprintf (message,vl);
@@ -42,8 +42,8 @@ json_printf_colored(char* color,char * message, ...) {
     printf ("\n" ANSI_COLOR_RESET);
 }
 
-struct error *
-json_add_error(int error_value,char* key, int obj_pos,int * size){
+struct json_error *
+json_add_error(int error_value,char *key, int obj_pos,int *size){
     static struct json_error errors[256];
     static int i =0;
     //if we want to add a new error
