@@ -15,10 +15,7 @@ Building the library:
 	*json-c
 
 *Building process:
-	*libtoolize
-	*aclocal
-	*automake --add-missing
-	*autoconf
+	*./autogen.sh
 	*./configure
 	*make
 	*make install (you may need sudo make install)
