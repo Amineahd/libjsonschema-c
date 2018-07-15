@@ -3,29 +3,31 @@
 #include "utils.h"
 
 /* numbers */
-static inline int json_handle_multipleOf_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
-static inline int json_handle_maximum_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
-static inline int json_handle_minimum_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
+static inline int json_handle_multipleOf_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
+static inline int json_handle_maximum_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
+static inline int json_handle_minimum_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
 
 /* arrays */
-static inline int json_handle_additionalItems_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
-static inline int json_handle_uniqueItems_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
+static inline int json_handle_additionalItems_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
+static inline int json_handle_uniqueItems_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
 
 /* strings */
-static inline int json_handle_pattern_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
+static inline int json_handle_pattern_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
 
 /* objects */
-static inline int json_handle_required_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
-int json_handle_additionalProperties_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
-int json_handle_dependencies_keyword(struct jsonschema_object instance_object, struct json_object *schema_value);
+static inline int json_handle_required_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
+int json_handle_additionalProperties_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
+int json_handle_dependencies_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value);
+static inline int json_default_handler(struct jsonschema_object *instance_object, struct json_object *schema_value);
+
 
 /* any type */
-static inline int json_handle_enum_keyword(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
-static inline int json_handle_allOf_keyword(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
-static inline int json_handle_anyOf_keyword(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
-static inline int json_handle_oneOf_keyword(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
-static inline int json_handle_not_keyword(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
-static inline int json_default_handler(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
+static inline int json_handle_enum_keyword(struct jsonschema_object *instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
+static inline int json_handle_allOf_keyword(struct jsonschema_object *instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
+static inline int json_handle_anyOf_keyword(struct jsonschema_object *instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
+static inline int json_handle_oneOf_keyword(struct jsonschema_object *instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
+static inline int json_handle_not_keyword(struct jsonschema_object *instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
+static inline int json_default_any_handler(struct jsonschema_object *instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value);
 
 /*int json_handle_definitions_keyword
  * int json_handle_title_keyword
@@ -34,8 +36,8 @@ static inline int json_default_handler(struct jsonschema_object instance_object,
  * int json_handle_format_keyword
  * int json_handle_schema_keyword*/
 
-int json_handle_min_keyword(double num1, double num2);
-int json_handle_max_keyword(double num1, double num2);
+int json_handle_min_keyword(double num1, double num2, int return_error);
+int json_handle_max_keyword(double num1, double num2, int return_error);
 //int json_handle_definitions_keyword
 struct json_keyword_validator json_keywords_validators[] = {
 	{ .json_keyword = json_keyword_multipleOf, .validators.json_validator = json_handle_multipleOf_keyword},
@@ -57,17 +59,17 @@ struct json_keyword_validator json_keywords_validators[] = {
 
 struct json_keyword_validator json_any_keywords_validators[] = {
 	{.json_keyword = json_keyword_enum, .validators.json_any_validator = json_handle_enum_keyword},
-	{.json_keyword = json_keyword_type, .validators.json_any_validator = json_default_handler},
+	{.json_keyword = json_keyword_type, .validators.json_any_validator = json_default_any_handler},
 	{.json_keyword = json_keyword_allOf, .validators.json_any_validator = json_handle_allOf_keyword},
 	{.json_keyword = json_keyword_anyOf, .validators.json_any_validator = json_handle_anyOf_keyword},
 	{.json_keyword = json_keyword_oneOf, .validators.json_any_validator = json_handle_oneOf_keyword},
 	{.json_keyword = json_keyword_not, .validators.json_any_validator = json_handle_not_keyword},
-	{.json_keyword = json_keyword_definitions, .validators.json_any_validator = json_default_handler},
-	{.json_keyword = json_keyword_title, .validators.json_any_validator = json_default_handler},
-	{.json_keyword = json_keyword_description, .validators.json_any_validator = json_default_handler},
-	{.json_keyword = json_keyword_default, .validators.json_any_validator = json_default_handler},
-	{.json_keyword = json_keyword_format, .validators.json_any_validator = json_default_handler},
-	{.json_keyword = json_keyword_schema, .validators.json_any_validator = json_default_handler},
+	{.json_keyword = json_keyword_definitions, .validators.json_any_validator = json_default_any_handler},
+	{.json_keyword = json_keyword_title, .validators.json_any_validator = json_default_any_handler},
+	{.json_keyword = json_keyword_description, .validators.json_any_validator = json_default_any_handler},
+	{.json_keyword = json_keyword_default, .validators.json_any_validator = json_default_any_handler},
+	{.json_keyword = json_keyword_format, .validators.json_any_validator = json_default_any_handler},
+	{.json_keyword = json_keyword_schema, .validators.json_any_validator = json_default_any_handler},
 	{0, NULL}
 };
 
@@ -80,6 +82,21 @@ struct json_keyword_validator json_min_max_validators[] = {
 	{.json_keyword = json_keyword_maxItems, .validators.json_min_max_validator = json_handle_max_keyword},
 	{0, NULL}
 };
+
+static struct jsonschema_object *
+create_jsonschema_object(char *key, const struct json_object *instance, const json_object *instance_schema, const json_object *parent_instance, int object_pos) {
+	struct jsonschema_object *obj = malloc(sizeof(struct jsonschema_object));
+	if(obj){
+		obj->key = key;
+		obj->object_pos = object_pos;
+		obj->instance = instance;
+		obj->instance_schema = instance_schema;
+		obj->parent_instance = parent_instance;
+
+		return obj;
+	}
+	return NULL;
+}
 
 int 
 json_compare_num(double num1, double num2, int strict){
@@ -125,23 +142,28 @@ json_get_validator(int json_keyword, struct json_keyword_validator validators_ar
 }
 
 static inline int 
-json_default_handler(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value) {
+json_default_handler(struct jsonschema_object *instance_object, struct json_object *schema_value) {
+	return 1;
+}
+
+static inline int 
+json_default_any_handler(struct jsonschema_object *instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value) {
 	return 1;
 }
 
 int
-json_handle_min_keyword(double num1, double num2) {
-	return (json_compare_num(num1, num2, 1)) < 0 ? 1 : 0;
+json_handle_min_keyword(double num1, double num2, int return_error) {
+	return (json_compare_num(num1, num2, 1)) > 0 ? 1 : return_error;
 }
 
 int
-json_handle_max_keyword(double num1, double num2) {
-	return (json_compare_num(num1, num2, 1)) > 0 ?1:0;
+json_handle_max_keyword(double num1, double num2, int return_error) {
+	return (json_compare_num(num1, num2, 1)) < 0 ? 1 : return_error;
 }
 
 static inline int
-json_handle_multipleOf_keyword(struct jsonschema_object instance_object, struct json_object *schema_value_object){
-	double instance_value = json_object_get_double(instance_object.instance);
+json_handle_multipleOf_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value_object){
+	double instance_value = json_object_get_double(instance_object->instance);
 	double schema_value = json_object_get_double(schema_value_object);
 	double op = instance_value / schema_value;
 	if(op - (int)op != 0)
@@ -150,21 +172,23 @@ json_handle_multipleOf_keyword(struct jsonschema_object instance_object, struct 
 }
 
 static inline int
-json_handle_maximum_keyword(struct jsonschema_object instance_object, struct json_object *schema_value_object){
-	struct lh_table *key_table = json_object_get_object(instance_object.instance_schema);
+json_handle_maximum_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value_object){
+	struct lh_table *key_table = json_object_get_object(instance_object->instance_schema);
 	struct lh_entry *excl_entry = lh_table_lookup_entry(key_table,"exclusiveMaximum");
-	double instance_value = json_object_get_double(instance_object.instance);
+	double instance_value = json_object_get_double(instance_object->instance);
 	double schema_value = json_object_get_double(schema_value_object);
+	
 	int excl = (excl_entry != NULL && json_object_get_boolean((json_object*)excl_entry->v))?1:0;
 	int return_error = (excl ==1)?json_exclusiveMaximum_error:json_maximum_error; // which error to return in case of an error
-	return (json_compare_num(instance_value, schema_value, excl)-excl>=0)?1:return_error;
+	
+	return (json_compare_num(instance_value, schema_value, excl)-excl>=0)?return_error:1;
 }
 
 static inline int
-json_handle_minimum_keyword(struct jsonschema_object instance_object, struct json_object *schema_value_object ){
-	struct lh_table *key_table = json_object_get_object(instance_object.instance_schema);
+json_handle_minimum_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value_object ){
+	struct lh_table *key_table = json_object_get_object(instance_object->instance_schema);
 	struct lh_entry *excl_entry = lh_table_lookup_entry(key_table,"exclusiveMinimum");
-	double instance_value = json_object_get_double(instance_object.instance);
+	double instance_value = json_object_get_double(instance_object->instance);
 	double schema_value = json_object_get_double(schema_value_object);
 
 	int excl = (excl_entry != NULL && json_object_get_boolean((json_object*)excl_entry->v))?1:0;
@@ -173,9 +197,9 @@ json_handle_minimum_keyword(struct jsonschema_object instance_object, struct jso
 }
 
 static inline int
-json_handle_pattern_keyword(struct jsonschema_object instance_object, struct json_object *schema_value_object){
+json_handle_pattern_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value_object){
 	const char *pattern_value = json_object_get_string(schema_value_object);
-	const char *instance_value = json_object_get_string(instance_object.instance);
+	const char *instance_value = json_object_get_string((struct json_object *)instance_object->instance);
 	regex_t pattern;
 	memset(&pattern, 0, sizeof(regex_t));
 	/* compile the pattern */
@@ -190,11 +214,11 @@ json_handle_pattern_keyword(struct jsonschema_object instance_object, struct jso
 }
 
 static inline int 
-json_handle_additionalItems_keyword(struct jsonschema_object instance_object, struct json_object *schema_value){
+json_handle_additionalItems_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value){
 	/* we need validation only when additionalItems is false and items is an array */
-	struct lh_table *key_table = json_object_get_object(instance_object.instance_schema);
+	struct lh_table *key_table = json_object_get_object(instance_object->instance_schema);
 	struct json_object *items = (struct json_object *)json_get_keyword_entry(key_table,"items")->v;
-	struct json_object *instance_entry = instance_object.instance;
+	const struct json_object *instance_entry = instance_object->instance;
 	if(json_object_is_type(schema_value, json_type_boolean) && !json_object_get_boolean(schema_value) 
 		&& json_object_is_type(items, json_type_array)) {
 		return (json_compare_num(json_object_array_length(items), json_object_array_length(instance_entry), 1) < 0)?json_additionalItems_error:0;
@@ -203,18 +227,25 @@ json_handle_additionalItems_keyword(struct jsonschema_object instance_object, st
 }
 
 static inline int
-json_handle_uniqueItems_keyword(struct jsonschema_object instance_object, struct json_object *schema_value){
-	struct json_object *instance_entry = instance_object.instance;
-	return (json_object_get_boolean(schema_value) && json_validate_array_items_uniqueness(instance_entry,-1) != 1)?json_uniqueItems_error:1;
+json_handle_uniqueItems_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value){
+	const struct json_object *instance_entry = instance_object->instance;
+
+	if(!json_object_is_type(instance_entry, json_type_array)){
+		json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
+		return -1;
+	}
+	return (json_object_get_boolean(schema_value) && json_validate_array_items_uniqueness((struct json_object *)instance_entry,-1) != 1)?json_uniqueItems_error:1;
 }
 
 static inline int 
-json_handle_required_keyword(struct jsonschema_object instance_object, struct json_object *schema_value){
-	struct lh_table *instance_table = json_object_get_object(instance_object.instance);
+json_handle_required_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value){
+	struct lh_table *instance_table = json_object_get_object(instance_object->instance);
 	int i;
+	printf("inside required");
 	for (i=0; i< json_object_array_length(schema_value); i++){
 		const char* required_key = json_object_get_string(json_object_array_get_idx(schema_value, i));
 		if(lh_table_lookup_entry(instance_table,required_key) == NULL){
+			printf("must return a required error!");
 			return json_required_error;
 		}
 	}
@@ -222,10 +253,10 @@ json_handle_required_keyword(struct jsonschema_object instance_object, struct js
 }
 
 int 
-json_handle_additionalProperties_keyword(struct jsonschema_object instance_object, struct json_object *schema_value){
+json_handle_additionalProperties_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value){
 	int num_founds = 0 ; // keep track of valid properties
-	struct lh_table *key_table = json_object_get_object(instance_object.instance_schema);
-	struct lh_table *instance_table = json_object_get_object(instance_object.instance);
+	struct lh_table *key_table = json_object_get_object(instance_object->instance_schema);
+	struct lh_table *instance_table = json_object_get_object(instance_object->instance);
 	if(json_object_get_type(schema_value) == json_type_boolean && json_object_get_boolean(schema_value) == 0){
 		/* additionalProperties depends on the properties and patternProperties keywords */
 		struct json_object * properties = (struct json_object *)lh_table_lookup_entry(key_table,"properties")->v;
@@ -274,14 +305,20 @@ json_handle_additionalProperties_keyword(struct jsonschema_object instance_objec
 
 /* NEEDS TO BE DISCUSSED */
 int 
-json_handle_dependencies_keyword(struct jsonschema_object instance_object, struct json_object *schema_value){
-	struct json_object *schema_entry = instance_object.instance_schema;
-	struct json_object *instance = instance_object.instance;
+json_handle_dependencies_keyword(struct jsonschema_object *instance_object, struct json_object *schema_value){
+	const struct json_object *schema_entry = instance_object->instance_schema;
+	const struct json_object *instance = instance_object->instance;
 	struct lh_table *key_table = json_object_get_object(schema_entry);
 	struct lh_table *schema_table = json_object_get_object(schema_value);
 	struct lh_table *instance_table = json_object_get_object(instance);
+	struct lh_table *parent_instance_table = json_object_get_object(instance_object->parent_instance);
 	struct lh_entry *value;
+
+	/* First check the object the dependency depends on exists or not */
 	lh_foreach(schema_table, value){
+		if(lh_table_lookup_ex(instance_table, (char *)value->k, NULL) != 1)
+			continue;
+
 		/* if the value type is an array, its a property dependency */
 		if(json_object_is_type((struct json_object*)value->v, json_type_array)){
 			/* check if the property exist in the instance */
@@ -303,18 +340,15 @@ json_handle_dependencies_keyword(struct jsonschema_object instance_object, struc
 			lh_foreach(dependencies_table, dependency){
 				struct lh_entry *tmp;
 				struct json_object *tmp_obj;
-				struct jsonschema_object tmp_jsonschema;
+				struct jsonschema_object * tmp_jsonschema;
 				/* if the keyword is properties or patternProperties, check that all the keys are already present in the instance before validating them */
 				if(strcmp(dependency->k, "properties") == 0){
 					lh_foreach(json_object_get_object(dependency->v), tmp){
-						if(json_object_object_get_ex(instance_object.instance,tmp->k, &tmp_obj) != 1)
+						if(json_object_object_get_ex(instance_object->instance,tmp->k, &tmp_obj) != 1)
 							return json_dependencies_error;
 						/* validate the object */
-						tmp_jsonschema.key = (char *) tmp->k;
-						tmp_jsonschema.instance_schema = (struct json_object *) tmp->v;
-						tmp_jsonschema.instance = tmp_obj;
-						tmp_jsonschema.object_pos = instance_object.object_pos + 1;
-						if(json_validate_instance_keywords(tmp_jsonschema, json_object_get_type(tmp_obj)) != 1)
+						tmp_jsonschema = create_jsonschema_object((char *)tmp->k, tmp_obj, (struct json_object *)tmp->v, instance_object->instance, instance_object->object_pos + 1);
+						if(tmp_jsonschema == NULL || json_validate_instance_keywords(tmp_jsonschema, json_object_get_type(tmp_obj)) != 1)
 							return json_dependencies_error;
 					}
 				}else if(strcmp(dependency->k, "patternProperties") == 0){
@@ -327,15 +361,12 @@ json_handle_dependencies_keyword(struct jsonschema_object instance_object, struc
 						}
 						/* check if the instance is a valid regex against our pattern */
 						struct lh_entry *inst_tmp;
-						lh_foreach(json_object_get_object(instance_object.instance), inst_tmp){
+						lh_foreach(json_object_get_object(instance_object->instance), inst_tmp){
 							//printf("%s \n", (char *)inst_tmp->k);
 							if(regexec(&pattern,inst_tmp->k, 0, NULL, 0) == 0){
 								/* validate the object */
-								tmp_jsonschema.key = (char *) tmp->k;
-								tmp_jsonschema.instance_schema = (struct json_object *) tmp->v;
-								tmp_jsonschema.instance = (struct json_object *)inst_tmp->v;
-								tmp_jsonschema.object_pos = instance_object.object_pos + 1;
-								if(json_validate_instance_keywords(tmp_jsonschema, json_object_get_type(tmp_jsonschema.instance)))
+								tmp_jsonschema = create_jsonschema_object((char *)tmp->k, (struct json_object *)inst_tmp->v, (struct json_object *)tmp->v, instance_object->instance, instance_object->object_pos + 1);
+								if(tmp_jsonschema == NULL || json_validate_instance_keywords(tmp_jsonschema, json_object_get_type(tmp_jsonschema->instance)) != 1)
 									return 1;
 							}
 						}
@@ -351,25 +382,29 @@ json_handle_dependencies_keyword(struct jsonschema_object instance_object, struc
 }
 
 int 
-json_validate_numeric_keywords(struct jsonschema_object instance_object){
-	int res = 1;
+json_validate_numeric_keywords(struct jsonschema_object *instance_object){
+	int res = 1, final_res = 1;
 	struct json_keyword_validator *keyword_validator = NULL;
-	char *key = instance_object.key;
-	json_object *instance_entry = instance_object.instance;
-	json_object *schema_entry = instance_object.instance_schema;
+	char *key = instance_object->key;
+	const struct json_object *instance_entry = instance_object->instance;
+	const struct json_object *schema_entry = instance_object->instance_schema;
 	struct lh_table *key_table = json_object_get_object(schema_entry); /* the schema of the key we are validating */
 	struct lh_entry *keyword_entry;
-	lh_foreach(key_table,keyword_entry){
+	
+	lh_foreach(key_table, keyword_entry){
 		const char *keyword = (const char *)keyword_entry->k;
 		int keyword_id = json_get_keyword_id(keyword); /* get the keyword id */
 		struct json_object *schema_value = (struct json_object *)keyword_entry->v;
 		keyword_validator = json_get_validator(keyword_id, json_keywords_validators);
+	
 		/* check if its a valid type */
 		if(json_object_get_type(instance_entry) != json_type_int && json_object_get_type(instance_entry) != json_type_double){
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 			return 0 ;
 		}
+	
 		json_printf_colored(ANSI_COLOR_BLUE,"\t KEYWORD %s",keyword);
+	
 		/* validate the instance against all present keywords */
 		if(keyword_validator){
 			res = keyword_validator->validators.json_validator(instance_object, schema_value);
@@ -377,22 +412,25 @@ json_validate_numeric_keywords(struct jsonschema_object instance_object){
 			res = keyword_validator->validators.json_any_validator(instance_object, keyword_entry, schema_value);
 		}else{
 			json_printf_colored(ANSI_COLOR_RED,"unknown keyword %s", keyword);
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 			return 0;
+		}
+	
+		if (res < 0) {
+			final_res = 0;
+			json_add_error(res, instance_object->key, instance_object->object_pos, NULL);
 		}
 	}
 	
-	if(res != 1)
-		return 0;
-	return 1; 
+	return final_res; 
 }
 int 
-json_validate_string_keywords(struct jsonschema_object instance_object){
-	int res = 1;
+json_validate_string_keywords(struct jsonschema_object *instance_object){
+	int res = 1, final_res = 1;
 	struct json_keyword_validator *keyword_validator = NULL;
-	char *key = instance_object.key;
-	json_object *instance_entry = instance_object.instance;
-	json_object *schema_entry = instance_object.instance_schema;
+	char *key = instance_object->key;
+	const struct json_object *instance_entry = instance_object->instance;
+	const struct json_object *schema_entry = instance_object->instance_schema;
 	
 	struct lh_table *key_table = json_object_get_object(schema_entry); /* the schema of the key we are validating */
 	struct lh_entry *keyword_entry;
@@ -404,112 +442,123 @@ json_validate_string_keywords(struct jsonschema_object instance_object){
 
 		json_printf_colored(ANSI_COLOR_BLUE, "\t KEYWORD %s ",keyword);
 		if(json_object_get_type(instance_entry) != json_type_string){
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 			return 0 ;
 		}
 		
 		if(keyword_validator){
 			res = keyword_validator->validators.json_validator(instance_object, schema_value);
 		} else if((keyword_validator = json_get_validator(keyword_id, json_min_max_validators))) {
-			res = keyword_validator->validators.json_min_max_validator(strlen(json_object_get_string(instance_entry)), json_object_get_int(schema_value));
+			int return_error = (keyword_id == json_keyword_minLength)?json_minLength_error:json_maxLength_error;
+			res = keyword_validator->validators.json_min_max_validator(strlen(json_object_get_string((struct json_object *)instance_entry)), json_object_get_int(schema_value), return_error);
 		} else if(keyword_validator = json_get_validator(keyword_id ,json_any_keywords_validators)){
 			res = keyword_validator->validators.json_any_validator(instance_object, keyword_entry, schema_value);
 		} else {
 			json_printf_colored(ANSI_COLOR_RED,"unknown keyword %s", keyword);
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
-			return 1;
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
+			return 0;
+		}
+		if (res < 0) {
+			final_res = 0;
+			json_add_error(res, instance_object->key, instance_object->object_pos, NULL);
 		}
 	}
 	
-	if(res != 1)
-		return 0;
-	return 1; 
+	return final_res; 
 }
 int 
-json_validate_array_keywords(struct jsonschema_object instance_object){ 
-	int res = 1;
+json_validate_array_keywords(struct jsonschema_object *instance_object){ 
+	int res = 1, final_res = 1;
 	struct json_keyword_validator *keyword_validator = NULL;
-	char *key = instance_object.key;
-	json_object *instance_entry = instance_object.instance;
-	json_object *schema_entry = instance_object.instance_schema;
+	char *key = instance_object->key;
+	const struct json_object *instance_entry = instance_object->instance;
+	const struct json_object *schema_entry = instance_object->instance_schema;
 	
 	struct lh_table *key_table = json_object_get_object(schema_entry); /* the schema of the key we are validating */
 	struct lh_entry *keyword_entry;
-	lh_foreach(key_table,keyword_entry){
+	lh_foreach(key_table, keyword_entry){
 		const char *keyword = (const char *)keyword_entry->k;
 		int keyword_id = json_get_keyword_id(keyword); // get the id
 		struct json_object *schema_value = (struct json_object *)keyword_entry->v;
 		keyword_validator = json_get_validator(keyword_id, json_keywords_validators);
 		
 		if(json_object_get_type(instance_entry) != json_type_array){
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 			return 0 ;
 		}
 		json_printf_colored(ANSI_COLOR_BLUE, "\t KEYWORD %s ",keyword);
 		if(keyword_validator){
 			res = keyword_validator->validators.json_validator(instance_object, schema_value);
 		} else if((keyword_validator = json_get_validator(keyword_id, json_min_max_validators))) {
-			res = keyword_validator->validators.json_min_max_validator(json_object_array_length(instance_entry), json_object_get_int(schema_value));
+			int return_error = (keyword_id == json_keyword_minItems)?json_minItems_error:json_maxItems_error;
+			res = keyword_validator->validators.json_min_max_validator(json_object_array_length(instance_entry), json_object_get_int(schema_value), return_error);
 		} else if((keyword_validator = json_get_validator(keyword_id, json_any_keywords_validators))){
 			res = keyword_validator->validators.json_any_validator(instance_object, keyword_entry, schema_value);
 		} else {
 			json_printf_colored(ANSI_COLOR_RED,"unknown keyword %s", keyword);
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 			return 0;
+		}
+
+		if (res < 0) {
+			final_res = 0;
+			json_add_error(res, instance_object->key, instance_object->object_pos, NULL);
 		}
 	}
 	
-	if(res != 1)
-		return 0;
-	return 1; 
+	return final_res; 
 }
 int 
-json_validate_object_keywords(struct jsonschema_object instance_object){ 
-	int res = 1;
+json_validate_object_keywords(struct jsonschema_object *instance_object){ 
+	int res = 1, final_res = 1;
 	struct json_keyword_validator *keyword_validator = NULL;
-	char *key = instance_object.key;
-	json_object *instance_entry = instance_object.instance;
-	json_object *schema_entry = instance_object.instance_schema;
+	char *key = instance_object->key;
+	const struct json_object *instance_entry = instance_object->instance;
+	const struct json_object *schema_entry = instance_object->instance_schema;
 	
 	const struct lh_table *key_table = json_object_get_object(schema_entry); /* the schema of the key we are validating */
 	struct lh_entry *keyword_entry;
 	struct lh_table *instance_table = json_object_get_object(instance_entry) ;
-	lh_foreach(key_table,keyword_entry){
+	lh_foreach(key_table, keyword_entry){
 		const char *keyword = (const char *)keyword_entry->k;
 		struct json_object *schema_value = (struct json_object *)keyword_entry->v;
 		int keyword_id = json_get_keyword_id(keyword); // get the id
 		keyword_validator = json_get_validator(keyword_id, json_keywords_validators);
 		if(json_object_get_type(instance_entry) != json_type_object){
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 			return 0 ;
 		}
 		json_printf_colored(ANSI_COLOR_BLUE, "\t KEYWORD %s ",keyword);
 		if(keyword_validator){
 			res = keyword_validator->validators.json_validator(instance_object, schema_value);
 		} else if((keyword_validator = json_get_validator(keyword_id, json_min_max_validators))) {
-			res = keyword_validator->validators.json_min_max_validator(lh_table_length(instance_table), json_object_get_int(schema_value));
+			int return_error = (keyword_id == json_keyword_minProperties)?json_minProperties_error:json_maxProperties_error;
+			res = keyword_validator->validators.json_min_max_validator(lh_table_length(instance_table), json_object_get_int(schema_value), return_error);
 		} else if(keyword_validator = json_get_validator(keyword_id, json_any_keywords_validators)){
 			res = keyword_validator->validators.json_any_validator(instance_object, keyword_entry, schema_value);
 		} else {
 			json_printf_colored(ANSI_COLOR_RED,"unknown keyword %s", keyword);
-			json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+			json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 			return 0;
 		}
 		
+		if (res < 0) {
+			final_res = 0;
+			json_add_error(res, instance_object->key, instance_object->object_pos, NULL);
+		}
 	}
 	
-	if(res != 1)
-		return 0;
-	return 1; 
+	return final_res; 
 }
 
 int 
-inline json_handle_enum_keyword(struct jsonschema_object instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
+inline json_handle_enum_keyword(struct jsonschema_object *instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
 	int i;
-	json_object *instance_entry = instance_object.instance;
+	const struct json_object *instance_entry = instance_object->instance;
+
 	for(i = 0; i< json_object_array_length(schema_value); i++){
 		const char * enum_val = json_object_to_json_string(json_object_array_get_idx(schema_value,i));
-		if(strcmp(json_object_to_json_string(instance_entry),enum_val) == 0){
+		if(strcmp(json_object_to_json_string((struct json_object *)instance_entry),enum_val) == 0){
 			return 1;
 		}
 	}
@@ -521,18 +570,20 @@ inline json_handle_enum_keyword(struct jsonschema_object instance_object, struct
  *          the idea is to retrieve a schema object from these keywords, put it in the place of the keyword, validate the object and re-insert the keyword again
  */
 static int
-json_get_instance_schema_from_Of_keywords(struct jsonschema_object instance_object, struct lh_entry *keyword_entry, struct json_object *temp_schema){
+json_get_instance_schema_from_Of_keywords(struct jsonschema_object *instance_object, struct lh_entry *keyword_entry, struct json_object *temp_schema){
 	struct lh_table * temp_schema_table = json_object_get_object(temp_schema);
 	struct lh_entry * temp_entry;
+	
 	/* link the retrieved schema to the instance schema to be validated */
 	keyword_entry->prev->next = temp_schema_table->head;
 	temp_schema_table->tail->next = keyword_entry->next;
-	struct jsonschema_object temp_object;
-	temp_object.key = instance_object.key;
-	temp_object.instance = instance_object.instance;
-	temp_object.instance_schema = instance_object.instance_schema;
-	int key_type = json_get_key_type(instance_object.instance_schema);
 	
+	struct jsonschema_object *temp_object = create_jsonschema_object(instance_object->key, instance_object->instance, instance_object->instance_schema, NULL, instance_object->object_pos);
+	int key_type = json_get_key_type(instance_object->instance_schema);
+	
+	if(!temp_object)
+		return 0;
+
 	/* do the validation */
 	int tmp_res = json_validate_anytype_keywords(temp_object);
 	if(tmp_res < 0){
@@ -540,104 +591,115 @@ json_get_instance_schema_from_Of_keywords(struct jsonschema_object instance_obje
 		keyword_entry->prev->next = keyword_entry;
 		return 0; 
 	}
+
 	tmp_res = json_validate_instance_keywords(temp_object,key_type);
 	if(tmp_res < 0){
 		/* re-insert the original keyword */
 		keyword_entry->prev->next = keyword_entry;
 		return 0; 
 	}
+
 	return 1;
 }
 
 static inline int
-json_handle_allOf_keyword(struct jsonschema_object instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
+json_handle_allOf_keyword(struct jsonschema_object *instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
 	int i;
+
 	for(i = 0; i< json_object_array_length(schema_value); i++){
 		json_printf_colored(ANSI_COLOR_CYAN,"Validating allOf schema #%d",i);
 		int res = json_get_instance_schema_from_Of_keywords(instance_object, keyword_entry, json_object_array_get_idx(schema_value, i));
+
 		if(res !=1 )
 			return json_allOf_error;
 	}
+
 	return 1;
 }
 
 static inline int
-json_handle_anyOf_keyword(struct jsonschema_object instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
+json_handle_anyOf_keyword(struct jsonschema_object *instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
 	int i;
+
 	for(i = 0; i< json_object_array_length(schema_value); i++){
 		json_printf_colored(ANSI_COLOR_CYAN,"Validating anyOf schema #%d",i);
 		int res = json_get_instance_schema_from_Of_keywords(instance_object, keyword_entry, json_object_array_get_idx(schema_value, i));
+
 		if(res == 1)
 			return res;
 	}
+
 	return json_anyOf_error;
 }
 
 static inline int
-json_handle_oneOf_keyword(struct jsonschema_object instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
+json_handle_oneOf_keyword(struct jsonschema_object *instance_object, struct lh_entry *keyword_entry, json_object *schema_value){
 	int i;
 	int num_found =0 ; 
 	for(i = 0; i< json_object_array_length(schema_value); i++){
 		json_printf_colored(ANSI_COLOR_CYAN,"Validating oneOf schema #%d",i);
+
 		int res = json_get_instance_schema_from_Of_keywords(instance_object, keyword_entry, json_object_array_get_idx(schema_value, i));
 		if(res == 1)
 			num_found++;
 	}
+
 	if(num_found !=1)
 		return json_oneOf_error;
 }
 
 static inline int
-json_handle_not_keyword(struct jsonschema_object instance_object, struct lh_entry* keyword_entry, struct json_object *schema_value){
+json_handle_not_keyword(struct jsonschema_object *instance_object, struct lh_entry *keyword_entry, struct json_object *schema_value){
 	int i;
 	int num_found =0 ; 
 	int res = json_get_instance_schema_from_Of_keywords(instance_object, keyword_entry, schema_value);
+
 	return (res==1 ? json_not_error : 1);
 }
 
 int 
-json_validate_anytype_keywords(struct jsonschema_object instance_object){ 
+json_validate_anytype_keywords(struct jsonschema_object *instance_object){ 
 	int res = 1;
-	char * key = instance_object.key;
-	json_object * instance_entry = instance_object.instance;
-	json_object * schema_entry = instance_object.instance_schema;
+	char * key = instance_object->key;
+	const json_object *instance_entry = instance_object->instance;
+	const json_object *schema_entry = instance_object->instance_schema;
 	
-	struct lh_table * key_table = json_object_get_object(schema_entry); /* the schema of the key we are validating */
-	struct lh_entry * keyword_entry;
-	struct lh_entry * tmp_keyword_entry;
-	lh_foreach_safe(key_table,keyword_entry,tmp_keyword_entry){
-		const char * keyword = (const char *)keyword_entry->k;
+	struct lh_table *key_table = json_object_get_object(schema_entry); /* the schema of the key we are validating */
+	struct lh_entry *keyword_entry;
+	struct lh_entry *tmp_keyword_entry;
+	lh_foreach_safe(key_table, keyword_entry, tmp_keyword_entry){
+		const char *keyword = (const char *)keyword_entry->k;
 		int keyword_id = json_get_keyword_id(keyword); // get the id
-		struct json_object * schema_value = (struct json_object *)keyword_entry->v;
+		struct json_object *schema_value = (struct json_object *)keyword_entry->v;
 		switch(keyword_id){
 			case json_keyword_enum:
 				res = json_handle_enum_keyword(instance_object, keyword_entry, schema_value);
 				if (res != 1)  
-					json_add_error(res,instance_object.key,instance_object.object_pos,NULL);
+					json_add_error(res,instance_object->key,instance_object->object_pos,NULL);
 				break;
 			case json_keyword_allOf:
 				res = json_handle_allOf_keyword(instance_object, keyword_entry, schema_value);
 				if (res != 1)  
-					json_add_error(res,instance_object.key,instance_object.object_pos,NULL);
+					json_add_error(res,instance_object->key,instance_object->object_pos,NULL);
 				break;
 			case json_keyword_anyOf:
 				res = json_handle_anyOf_keyword(instance_object, keyword_entry, schema_value); 
 				if (res != 1)  
-					json_add_error(res,instance_object.key,instance_object.object_pos,NULL);
+					json_add_error(res,instance_object->key,instance_object->object_pos,NULL);
 				break;
 			case json_keyword_oneOf:
 				res = json_handle_oneOf_keyword(instance_object, keyword_entry, schema_value); 
 				if (res != 1)  
-					json_add_error(res,instance_object.key,instance_object.object_pos,NULL);
+					json_add_error(res,instance_object->key,instance_object->object_pos,NULL);
 				break;
 			case json_keyword_not:
 				res = json_handle_not_keyword(instance_object, keyword_entry, schema_value); 
 				if (res != 1)  
-					json_add_error(res,instance_object.key,instance_object.object_pos,NULL);
+					json_add_error(res,instance_object->key,instance_object->object_pos,NULL);
 				break;
 			case -1: // no valid keyword found
 				json_printf_colored(ANSI_COLOR_RED,"unknown keyword %s", keyword);
-				json_add_error(json_invalid_value_error,instance_object.key,instance_object.object_pos,NULL);
+				json_add_error(json_invalid_value_error,instance_object->key,instance_object->object_pos,NULL);
 				break;
 		}
 		
@@ -683,11 +745,12 @@ json_validate_anytype_keywords(struct jsonschema_object instance_object){
 // }
 
 int 
-json_validate_instance_keywords(struct jsonschema_object instance_object,int key_type){
+json_validate_instance_keywords(struct jsonschema_object *instance_object,int key_type){
 	
 	//number = 7, double = 2 and int = 3 have the same validation
 	if(key_type == 7 || key_type == 2)
 		key_type = 3;
+
 	switch(key_type){
 		case json_type_int:
 			return json_validate_numeric_keywords(instance_object);   
@@ -702,51 +765,60 @@ json_validate_instance_keywords(struct jsonschema_object instance_object,int key
 }
 
 int
-json_validate_array_instance(struct jsonschema_object instance_object){
+json_validate_array_instance(struct jsonschema_object *instance_object){
 	//validate the array itself.
 	int tmp_res = json_validate_array_keywords(instance_object);
+
 	//if the array has the items keyword and its type is object, we need it to validate array items
-	const struct json_object* items_schema = (const json_object *)lh_table_lookup_entry(json_object_get_object(instance_object.instance_schema),"items")->v;
+	const struct json_object* items_schema = (const json_object *)lh_table_lookup_entry(json_object_get_object(instance_object->instance_schema),"items")->v;
+
 	if(items_schema != NULL && json_object_get_type(items_schema) == json_type_object){
 		//validate array elements using the items schema
 		int i;
-		for(i=0; i< json_object_array_length(instance_object.instance); i++){
-			const json_object *obj = json_object_array_get_idx(instance_object.instance,i);
+
+		for(i=0; i< json_object_array_length(instance_object->instance); i++){
+			const json_object *obj = json_object_array_get_idx(instance_object->instance,i);
 			const struct json_object *items_schema_copy = copy_object(items_schema);
-			struct jsonschema_object tmp_instance_object;
-			tmp_instance_object.key = "instance object";
-			tmp_instance_object.object_pos = i+1; /* i starts from 0 */
-			tmp_instance_object.instance = obj;
-			tmp_instance_object.instance_schema = items_schema_copy;
-			tmp_res = json_validate_object_instance(tmp_instance_object ) && tmp_res;
+			
+			struct jsonschema_object * tmp_instance_object = create_jsonschema_object("instance object", obj, items_schema_copy, instance_object->instance, i+1);
+
+			if(!tmp_instance_object)
+				tmp_res = 0;
+			else
+				tmp_res = json_validate_object_instance(tmp_instance_object) && tmp_res;
 		}
 	}
 	return tmp_res;
 }
 
 int
-json_validate_object_instance(struct jsonschema_object instance_object){
-	//an instance can be either an object or an array of objects.
-	//if its an array of objects, validate each one.
-	struct lh_table* instance_table = json_object_get_object(instance_object.instance);
-	struct lh_table* schema_table = json_object_get_object(instance_object.instance_schema);
+json_validate_object_instance(struct jsonschema_object *instance_object){
+	/* an instance can be either an object or an array of objects.
+	* if its an array of objects, validate each one.
+	*/
+	struct jsonschema_object *tmp_instance_object;
+	struct lh_table* instance_table = json_object_get_object(instance_object->instance);
+	struct lh_table* schema_table = json_object_get_object(instance_object->instance_schema);
 	struct lh_entry* instance_entry; 
 	
-	//the object itself first
+	/* the object itself first */
 	int tmp_res = 1;
 	tmp_res = json_validate_object_keywords(instance_object);
-	// elements 
-	lh_foreach(instance_table,instance_entry){
-		const char * instance_key = (const char*)instance_entry->k;
+	
+	/* elements */ 
+	lh_foreach(instance_table, instance_entry){
+		char * instance_key = (char*)instance_entry->k;
 		struct json_object * instance_value = (struct json_object *)instance_entry->v;
-		//lookup the key in the schema 
+		
+		/* lookup the key in the schema */
 		struct lh_entry* schema_entry = lh_table_lookup_entry(schema_table, instance_key);
 		
-		//lookup the key in the schema 
+		/* lookup the key in the schema */
 		if(schema_entry == NULL){
-			//look for the properties keyword
+			/* look for the properties keyword */
 			struct lh_entry* properties_entry;
 			properties_entry = lh_table_lookup_entry(schema_table,"properties");
+		
 			//look for the key inside the properties object
 			if(properties_entry != NULL){
 				schema_entry = lh_table_lookup_entry(json_object_get_object((json_object*) properties_entry->v),instance_key);
@@ -768,19 +840,23 @@ json_validate_object_instance(struct jsonschema_object instance_object){
 		}
 		// prepare the object for validation
 		const struct json_object * schema_value = (struct json_object *)schema_entry->v;
-		instance_object.key = instance_key;
-		instance_object.instance = instance_value;
-		instance_object.instance_schema = schema_value;
+		tmp_instance_object = create_jsonschema_object(instance_key, instance_value, schema_value, instance_object->instance, instance_object->object_pos +1);
+		
+		if(!tmp_instance_object) 
+			return 0;
+
 		json_printf_colored(ANSI_COLOR_CYAN,"***KEY: %s ",instance_key);
+
 		/* if its an object, call this function again */
-		if(json_object_get_type(instance_value) == json_type_object)
-			tmp_res = json_validate_object_instance(instance_object) && tmp_res;
-		else{ /* validate the key */
+		if(json_object_get_type(instance_value) == json_type_object) {
+			tmp_res = json_validate_object_instance(tmp_instance_object) && tmp_res;
+		} else { /* validate the key */
 			// get the type of the key
 			int key_type = json_get_key_type(schema_value);
+		
 			//validate keywords that apply to any type
 			//tmp_res = json_validate_anytype_keywords(instance_object) && tmp_res;
-			tmp_res = json_validate_instance_keywords(instance_object,key_type) && tmp_res;
+			tmp_res = json_validate_instance_keywords(tmp_instance_object, key_type) && tmp_res;
 		}
 	}
 	
@@ -790,8 +866,8 @@ json_validate_object_instance(struct jsonschema_object instance_object){
 int
 json_validate_instance(const char *instance_path, const char *schema_path){
 	/* get the schema and instance objects */
-	json_object *schema = json_object_from_file(schema_path);
-	json_object *instance = json_object_from_file(instance_path);
+	const struct json_object *schema = json_object_from_file(schema_path);
+	const struct json_object *instance = json_object_from_file(instance_path);
 	
 	if(schema == NULL) {
 		json_printf_colored("could not load schema from file.",ANSI_COLOR_RED);
@@ -805,16 +881,17 @@ json_validate_instance(const char *instance_path, const char *schema_path){
 	json_printf_colored(ANSI_COLOR_YELLOW,"Validating JSON schema...");
 	if(json_validate_schema(schema_path) == 1) {
 		json_printf_colored(ANSI_COLOR_YELLOW,"Validating JSON file...");
-		struct jsonschema_object instance_object;
-		instance_object.instance = instance;
-		instance_object.instance_schema = schema;
-		instance_object.object_pos = 0; //root element
+		struct jsonschema_object *instance_object = create_jsonschema_object("root array", instance, schema, NULL, 0);
+
+		if(!instance_object){
+			json_printf_colored(ANSI_COLOR_RED, "Could not allocate memory for instance object \n");
+			return 0;
+		}
+
 		/* a json file can either contain an object or an array of objects */
 		if(json_object_get_type(instance) == json_type_array){
-			instance_object.key = "root array";
 			json_validate_array_instance(instance_object);
 		}else{
-			instance_object.key = "root object";
 			json_validate_object_instance(instance_object);
 		}
 		// retrieve errors

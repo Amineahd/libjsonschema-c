@@ -133,7 +133,7 @@ json_get_keyword_entry(const lh_table * table, const char *instance_key){
 	struct lh_entry *entry;
 	lh_foreach(table,entry){
 		const char *key = (const char*) entry->k;
-		const struct json_objecr *entry_object = (const struct json_object*) entry->v;
+		const struct json_object *entry_object = (const struct json_object*) entry->v;
 		if(strcmp(key,instance_key) == 0){
 			return entry;
 		}
@@ -367,9 +367,9 @@ int
 json_check_allowed_values(int keyword_position,struct json_object *value, struct lh_table* parent, int items_values){
 	int allowed_values[MAX_CONSTRAINTS], i, res = 1;
 	if(items_values == 1)
-		json_split_str(keyword_position, &allowed_values, 5); // get allowed children values ID
+		json_split_str(keyword_position, allowed_values, 5); // get allowed children values ID
 		else
-			json_split_str(keyword_position, &allowed_values, 4); // get allowed values ID
+			json_split_str(keyword_position, allowed_values, 4); // get allowed values ID
 			
 			const char *key = json_keywords_constraints[keyword_position][0];
 		const int array_length = sizeof(json_values)/sizeof(json_values[0]);
