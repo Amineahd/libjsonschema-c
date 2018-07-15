@@ -1,0 +1,12 @@
+{
+	"id":3,
+	"checked":true,
+	"dimensions": {
+		"width":4,
+		"height":3
+	},
+	"name":"product1",
+	
+},
+{
+}

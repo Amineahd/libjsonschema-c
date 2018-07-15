@@ -5,12 +5,16 @@
     "items": {
             "title": "Product",
             "type": "object",
-            "maxProperties" : 3,
+		"minProperties":1,
+            "maxProperties" : 5,
             "patternProperties":{
                 "price":{
                     "type":"number",
+			"maximum":500,
+			"exclusiveMaximum":false,
                     "minimum": 5,
-                    "exclusiveMinimum": false
+                    "exclusiveMinimum": false,
+			"multipleOf":5
                 }
             },
             "dependencies": {
@@ -23,7 +27,7 @@
                             },
                             "minItems": 1,
                             "maxItems" : 3,
-                            "uniqueItems": true
+                            "uniqueItems": false
                         }
                     }
                 }
@@ -36,21 +40,38 @@
                         { "enum": [1,2,3,4]}
                         ]
                 },
+		"weight": {
+			"type":"number",
+			"maximum":60,
+			"exclusiveMaximum":true,
+			"minimum":1,
+			"exclusiveMinimum":true
+		},
                 "name": {
                             "type": "string",
-                            "pattern":"p"
+                            "pattern":"p",
+				"minLength":3,
+				"maxLength":30
                 },
                 "dimensions": {
                     "type": "object",
                     "properties": {
                         "length": {"type": "number"},
-                        "width": {"type": "number"},
+                        "width": {"type": "number",
+					"maximum":200
+				},
                         "height": {"type": "number"}
                     },
                     "required": ["length", "width", "height"]
-                }
+                },
+		"ingredients": {
+			"type" : "array",
+			"items": {
+				"type":"string"
+			},
+			"uniqueItems":true
+		}
             },
             "required": ["id"] 
     }
-
 }
