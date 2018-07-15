@@ -1,10 +1,36 @@
 [{
         "id": 1,
-        "name" : "pa",
-        "tags": ["hi"],
+        "name" : "product1",
+        "tags": ["hair", "style"],
+	"weight":45,
+	"dimensions": {
+		"width":1,
+		"height":1,
+		"length":1
+	}
     },
     {
         "id": 2,
-        "tags": ["hi"],
-        "name":"pamine"
-}]
+        "tags": ["food","bread","tasty","crusty"],
+        "name":"Ciabattaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+	"weight":60,
+	"dimensions": {
+		"width":350
+	},
+	"ingredients": ["flour", "flour", "salt"],
+	"price":500
+    },
+    {
+    },
+    {
+	"id":"5",
+	"tags":"",
+	"weight":0,
+	"name":"",
+	"price":5
+    },
+    {
+	"price":4,
+	"tags":[]	
+    }
+]

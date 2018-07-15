@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "minProperties": 2,
+  "maxProperties": 5,
+  "properties": {
+    "checked": {
+      "type": "boolean",
+      "title": "The Checked Schema",
+      "description": "An explanation about the purpose of this instance.",
+      "default": false
+    },
+    "dimensions": {
+      "type": "object",
+      "minProperties": 2,
+      "maxProperties": 5,
+      "properties": {
+        "width": {
+          "type": "integer",
+          "title": "The Width Schema",
+          "description": "An explanation about the purpose of this instance.",
+          "default": 0,
+          "exclusiveMinimum": 2,
+          "exclusiveMaximum": 5
+        },
+        "height": {
+          "type": "integer",
+          "title": "The Height Schema",
+          "description": "An explanation about the purpose of this instance.",
+          "default": 0,
+          "exclusiveMinimum": 2,
+          "exclusiveMaximum": 5
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ]
+    },
+    "id": {
+      "type": "integer",
+      "title": "The Id Schema",
+      "description": "An explanation about the purpose of this instance.",
+      "default": 0,
+      "exclusiveMinimum": 2,
+      "exclusiveMaximum": 5
+    },
+    "name": {
+      "type": "string",
+      "title": "The Name Schema",
+      "description": "An explanation about the purpose of this instance.",
+      "default": ""
+    },
+    "price": {
+      "type": "number",
+      "title": "The Price Schema",
+      "description": "An explanation about the purpose of this instance.",
+      "default": 0,
+      "exclusiveMinimum": 2,
+      "exclusiveMaximum": 5
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 5,
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "title": "The 0 Schema",
+        "description": "An explanation about the purpose of this instance.",
+        "default": ""
+      }
+    }
+  },
+  "required": [
+    "checked",
+    "dimensions",
+    "id",
+    "name",
+    "price",
+    "tags"
+  ]
+}
